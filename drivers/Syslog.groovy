@@ -73,22 +73,7 @@ void parse(String description) {
     // don't log our own messages, we will get into a loop
     if("${descData.id}" != "${device.id}") {
         if(ip != null) {
-            // facility = 1 (user), severity = 6 (informational)
-            // facility * 8 + severity = 14
-            def priority
-            switch (descData.level) {
-                case "info":
-                    priority = 14
-                    break
-                case "warn":
-                    priority = 12
-                    break
-                case "error":
-                    priority = 11
-                    break
-                default:
-                    priority = 15
-            }
+            def priority = descData.level
             
             // we get date-space-time but would like ISO8601
             if (logEnable) log.debug "timezone from hub is ${location.timeZone.toString()}"
@@ -100,7 +85,7 @@ void parse(String description) {
             if (logEnable) log.debug "time we get = ${descData.time}; time we want ${isoDate}"
             
             // made up PROCID or MSGID //TODO find PROCID and MSGID in the API?
-            def constructedString = "<${priority}>1 ${isoDate} ${hostname} Hubitat - - [sd_id_1@32473 device_name=\"${descData.name}\" device_id=\"${descData.id}\"] ${descData.msg}"
+            def constructedString = "${priority} ${isoDate} ${hostname} Hubitat - - [sd_id_1@32473 device_name=\"${descData.name}\" device_id=\"${descData.id}\"] ${descData.msg}"
             if (logEnable) log.debug "sending: ${constructedString}"
             
             if (udptcp == 'UDP') {

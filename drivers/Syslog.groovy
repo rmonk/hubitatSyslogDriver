@@ -25,6 +25,8 @@
 
 */
 
+
+
 metadata {
     definition (name: "Syslog", namespace: "hubitatuser12", author: "Hubitat User 12") {
         capability "Initialize"
@@ -61,6 +63,32 @@ void updated() {
     if (logEnable) runIn(1800,logsOff)
 }
 
+String parseLevel(String level) {
+    prival = 1 * 8 // Syslog "user level messages"
+    switch(level) {
+        case "info":
+            prival += 6
+            break
+        case "debug":
+            prival += 7
+            break
+        case "trace":
+            prival += 7
+            break
+        case "warn":
+            prival += 4
+            break
+        case "error":
+            prival += 3
+            break
+        default:
+            prival += 6
+            break
+    }
+    
+    return(prival)
+}
+
 void parse(String description) {
     
     def hub = location.hubs[0]
@@ -74,6 +102,7 @@ void parse(String description) {
     if("${descData.id}" != "${device.id}") {
         if(ip != null) {
             def priority = descData.level
+            prival = parseLevel(priority)
             
             // we get date-space-time but would like ISO8601
             if (logEnable) log.debug "timezone from hub is ${location.timeZone.toString()}"
@@ -85,7 +114,8 @@ void parse(String description) {
             if (logEnable) log.debug "time we get = ${descData.time}; time we want ${isoDate}"
             
             // made up PROCID or MSGID //TODO find PROCID and MSGID in the API?
-            def constructedString = "${priority} ${isoDate} ${hostname} Hubitat - - [sd_id_1@32473 device_name=\"${descData.name}\" device_id=\"${descData.id}\"] ${descData.msg}"
+            //def constructedString = "${priority} ${isoDate} ${hostname} Hubitat - - [sd_id_1@32473 device_name=\"${descData.name}\" device_id=\"${descData.id}\"] ${descData.msg}"
+            def constructedString = "<${prival}>1 ${isoDate} ${hostname} Hubitat - - level=\"${priority}\" device_name=\"${descData.name}\" device_id=\"${descData.id}\" message=\"${descData.msg}\""
             if (logEnable) log.debug "sending: ${constructedString}"
             
             if (udptcp == 'UDP') {
@@ -123,7 +153,8 @@ void uninstalled() {
 
 void initialize() {
     if (logEnable) log.debug "initialize()"
-    runIn(5, "connect")
+    log.info "Starting log export to syslog"
+    runIn(10, "connect")
 }
 
 void webSocketStatus(String message) {

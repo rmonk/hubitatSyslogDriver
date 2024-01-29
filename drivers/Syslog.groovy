@@ -16,6 +16,9 @@
 
 /* Notes
 
+2024-01-29 - rmonk
+  - Tweaked the log string to be RFC5424 compliant
+  - Changed the logging init delay to 10 seconds to try and get it to properly start on boot
 2020-08-18 - staylorx
   - A couple of dumb coding errors, and still trying to sort out TCP
 2020-08-18 - staylorx
